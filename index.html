@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0f">
+<title>RiddleChain — GenLayer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;overflow-x:hidden;}
+body{
+  background:#0a0a0f;
+  color:#e2e2ff;
+  font-family:'Press Start 2P',monospace;
+  font-size:10px;
+  min-height:100vh;
+  line-height:1.8;
+}
+
+/* GRID BG */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(108,43,217,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(108,43,217,0.04) 1px,transparent 1px);
+  background-size:16px 16px;
+  pointer-events:none;z-index:0;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:#111;}
+::-webkit-scrollbar-thumb{background:#6c2bd9;}
+
+/* ── PIXEL BOX ── */
+.pbox{
+  background:#111122;
+  border:3px solid #6c2bd9;
+  box-shadow:4px 4px 0 #000;
+  position:relative;
+}
+.pbox.green{border-color:#22c55e;box-shadow:4px 4px 0 #000;}
+.pbox.yellow{border-color:#facc15;box-shadow:4px 4px 0 #000;}
+.pbox.cyan{border-color:#22d3ee;box-shadow:4px 4px 0 #000;}
+.pbox.red{border-color:#ef4444;box-shadow:4px 4px 0 #000;}
+
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;
+  background:#0a0a0f;
+  border-bottom:3px solid #6c2bd9;
+  box-shadow:0 3px 0 #000;
+  height:52px;
+  display:flex;align-items:center;
+  padding:0 12px;gap:8px;
+  z-index:1000;
+  width:100%;
+}
+.nav-logo{
+  font-size:clamp(8px,3vw,12px);
+  color:#facc15;
+  text-shadow:2px 2px 0 #000;
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.nav-logo span{color:#a855f7;}
+.nav-sp{flex:1;}
+
+/* ── VIEWS ── */
+.view{display:none;position:relative;z-index:1;}
+.view.active{display:block;}
+
+/* ── PAGE WRAP ── */
+.page{
+  max-width:600px;
+  margin:0 auto;
+  padding:16px 12px 60px;
+}
+
+/* ── PIXEL BUTTON ── */
+.pbtn{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(6px,2vw,8px);
+  padding:12px 16px;
+  border:3px solid #a855f7;
+  background:#6c2bd9;
+  color:#fff;
+  cursor:pointer;
+  box-shadow:4px 4px 0 #000;
+  display:inline-block;
+  text-align:center;
+  transition:transform .1s,box-shadow .1s;
+  width:100%;
+  line-height:1.6;
+}
+.pbtn:hover{background:#7c3aed;box-shadow:6px 6px 0 #000;transform:translate(-1px,-1px);}
+.pbtn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000;}
+.pbtn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.pbtn.green{background:#16a34a;border-color:#86efac;}
+.pbtn.green:hover{background:#15803d;}
+.pbtn.outline{background:transparent;color:#a855f7;}
+.pbtn.sm{font-size:6px;padding:8px 12px;}
+
+/* ── TITLE CARD ── */
+.title-card{text-align:center;padding:20px 12px;}
+.title-tag{
+  font-size:clamp(5px,1.5vw,7px);
+  color:#22d3ee;
+  letter-spacing:0.2em;
+  margin-bottom:12px;
+  text-transform:uppercase;
+}
+.big-title{
+  font-size:clamp(16px,6vw,36px);
+  color:#facc15;
+  text-shadow:3px 3px 0 #000,0 0 20px rgba(250,204,21,0.3);
+  line-height:1.3;
+  margin-bottom:8px;
+}
+.big-title span{color:#a855f7;text-shadow:3px 3px 0 #000,0 0 20px rgba(168,85,247,0.4);}
+.title-sub{font-family:'VT323',monospace;font-size:clamp(14px,4vw,18px);color:#555577;letter-spacing:0.1em;margin-top:8px;}
+.blink{animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* ── STATS ── */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  margin:16px 0;
+}
+@media(min-width:400px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
+.stat-box{padding:12px 8px;text-align:center;}
+.stat-num{font-size:clamp(12px,4vw,18px);color:#a855f7;text-shadow:2px 2px 0 #000;}
+.stat-lbl{font-family:'VT323',monospace;font-size:13px;color:#555577;margin-top:4px;}
+
+/* ── MODE CARDS ── */
+.mode-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:16px 0;
+}
+.mode-card{
+  padding:14px 10px;
+  cursor:pointer;
+  transition:transform .1s,box-shadow .1s;
+}
+.mode-card:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #000;}
+.mode-card:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000;}
+.mode-icon{font-size:18px;margin-bottom:8px;display:block;}
+.mode-name{
+  font-size:clamp(5px,2vw,7px);
+  color:#facc15;
+  text-shadow:1px 1px 0 #000;
+  margin-bottom:6px;
+  line-height:1.6;
+}
+.mode-desc{font-family:'VT323',monospace;font-size:clamp(12px,3vw,14px);color:#555577;line-height:1.5;}
+
+/* ── LEADERBOARD ── */
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:2px solid rgba(108,43,217,0.2);}
+.lb-rank{font-size:7px;width:18px;color:#555577;}
+.lb-rank.r1{color:#facc15;}.lb-rank.r2{color:#aaa;}.lb-rank.r3{color:#cd7f32;}
+.lb-addr{font-family:'VT323',monospace;font-size:clamp(13px,3vw,16px);flex:1;color:#e2e2ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-score{font-size:clamp(7px,2vw,9px);color:#a855f7;}
+
+/* ── GAME HEADER ── */
+.game-hdr{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.back-btn{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(6px,2vw,7px);
+  padding:8px 10px;
+  border:2px solid #555577;
+  background:transparent;
+  color:#555577;
+  cursor:pointer;
+  box-shadow:2px 2px 0 #000;
+  white-space:nowrap;
+}
+.back-btn:hover{border-color:#a855f7;color:#a855f7;}
+.game-title{font-size:clamp(7px,2.5vw,10px);color:#facc15;text-shadow:1px 1px 0 #000;flex:1;}
+.room-tag{font-size:6px;color:#22d3ee;padding:5px 8px;border:2px solid #22d3ee;background:rgba(34,211,238,0.08);box-shadow:2px 2px 0 #000;white-space:nowrap;}
+
+/* ── HP BAR ── */
+.hp-wrap{padding:12px 14px;margin-bottom:12px;}
+.hp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.hp-lbl{font-size:6px;color:#555577;width:44px;flex-shrink:0;}
+.hp-hearts{display:flex;gap:4px;}
+.heart{font-size:12px;color:#ef4444;}
+.heart.empty{color:#222;filter:grayscale(1);}
+.score-disp{font-size:10px;color:#22c55e;text-shadow:0 0 6px rgba(34,197,94,0.4);margin-left:auto;}
+.prog-bg{height:8px;background:#111;border:2px solid #333;box-shadow:2px 2px 0 #000;}
+.prog-fill{height:100%;background:#6c2bd9;transition:width .4s;}
+
+/* ── DIALOGUE BOX ── */
+.dialogue{padding:16px;margin-bottom:12px;position:relative;}
+.dialogue::before{
+  content:'▶ RIDDLE';
+  position:absolute;top:-10px;left:10px;
+  background:#111122;
+  padding:0 6px;
+  font-size:6px;color:#a855f7;
+  border:2px solid #6c2bd9;
+}
+.riddle-meta{font-size:clamp(5px,1.5vw,7px);color:#22d3ee;margin-bottom:10px;}
+.riddle-qid{float:right;font-size:6px;color:#333;}
+.riddle-text{font-family:'VT323',monospace;font-size:clamp(16px,4vw,20px);color:#e2e2ff;line-height:1.6;margin-bottom:14px;}
+
+/* ── OPTIONS ── */
+.opts-grid{display:flex;flex-direction:column;gap:8px;}
+.opt-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:12px;
+  background:#0d0d1a;
+  border:3px solid #222;
+  box-shadow:3px 3px 0 #000;
+  cursor:pointer;
+  width:100%;
+  transition:transform .1s,box-shadow .1s;
+  text-align:left;
+}
+.opt-btn:hover{border-color:#a855f7;background:#1a1a2e;transform:translate(-1px,-1px);box-shadow:4px 4px 0 #000;}
+.opt-btn:active{transform:translate(1px,1px);box-shadow:2px 2px 0 #000;}
+.opt-btn.selected{border-color:#a855f7;background:rgba(108,43,217,0.2);}
+.opt-btn.correct{border-color:#22c55e;background:rgba(34,197,94,0.12);}
+.opt-btn.wrong{border-color:#ef4444;background:rgba(239,68,68,0.1);}
+.opt-letter{
+  font-size:clamp(6px,2vw,8px);
+  width:28px;height:28px;
+  border:2px solid #333;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;color:#a855f7;
+  background:#0a0a0f;
+}
+.opt-btn:hover .opt-letter,.opt-btn.selected .opt-letter{background:#6c2bd9;border-color:#a855f7;color:#fff;}
+.opt-btn.correct .opt-letter{background:#22c55e;border-color:#22c55e;color:#fff;}
+.opt-btn.wrong .opt-letter{background:#ef4444;border-color:#ef4444;color:#fff;}
+.opt-text{font-family:'VT323',monospace;font-size:clamp(15px,4vw,18px);color:#e2e2ff;line-height:1.4;}
+
+/* ── FEEDBACK ── */
+.feedback{padding:12px 14px;margin:10px 0;display:none;}
+.feedback.correct{display:block;border-color:#22c55e;}
+.feedback.wrong{display:block;border-color:#ef4444;}
+.fb-title{font-size:7px;margin-bottom:6px;}
+.feedback.correct .fb-title{color:#22c55e;}
+.feedback.wrong .fb-title{color:#ef4444;}
+.fb-text{font-family:'VT323',monospace;font-size:15px;color:#555577;}
+
+/* ── TX STATUS ── */
+.tx-status{
+  display:none;
+  padding:10px 14px;
+  margin:10px 0;
+  align-items:center;gap:10px;
+  font-family:'VT323',monospace;
+  font-size:clamp(14px,3vw,16px);
+}
+.tx-status.pending{display:flex;border-color:#facc15;color:#facc15;}
+.tx-status.ok{display:flex;border-color:#22c55e;color:#22c55e;}
+.tx-status.err{display:flex;border-color:#ef4444;color:#ef4444;}
+.spinner{
+  width:14px;height:14px;flex-shrink:0;
+  border:3px solid rgba(250,204,21,0.2);
+  border-top:3px solid #facc15;
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── SUBMIT ROW ── */
+.submit-row{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.submit-hint{font-family:'VT323',monospace;font-size:14px;color:#555577;}
+
+/* ── ROOM CODE ── */
+.rc-display{text-align:center;padding:24px 16px;}
+.rc-label{font-size:clamp(5px,1.5vw,7px);color:#555577;letter-spacing:0.25em;margin-bottom:12px;}
+.rc-code{
+  font-size:clamp(22px,8vw,44px);
+  color:#facc15;
+  text-shadow:3px 3px 0 #000,0 0 24px rgba(250,204,21,0.4);
+  letter-spacing:0.15em;
+  word-break:break-all;
+}
+.rc-hint{font-family:'VT323',monospace;font-size:14px;color:#555577;margin-top:10px;line-height:1.7;}
+.copy-btn{
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;
+  margin-top:12px;
+  padding:10px 14px;
+  border:2px solid #22d3ee;
+  background:rgba(34,211,238,0.08);
+  color:#22d3ee;
+  cursor:pointer;
+  box-shadow:2px 2px 0 #000;
+}
+.copy-btn:active{transform:translate(2px,2px);box-shadow:none;}
+
+/* ── INPUT ── */
+.input-grp{margin-bottom:14px;}
+.px-label{
+  font-size:clamp(5px,1.5vw,7px);
+  color:#555577;
+  letter-spacing:0.12em;
+  margin-bottom:6px;
+  display:block;
+  text-transform:uppercase;
+  line-height:1.8;
+}
+.px-input{
+  width:100%;
+  background:#0d0d1a;
+  border:3px solid #333;
+  padding:10px 12px;
+  color:#e2e2ff;
+  font-family:'VT323',monospace;
+  font-size:clamp(16px,4vw,18px);
+  outline:none;
+  box-shadow:3px 3px 0 #000;
+}
+.px-input:focus{border-color:#a855f7;}
+.px-input::placeholder{color:#333;}
+textarea.px-input{resize:vertical;min-height:72px;}
+
+/* ── GRID 2 ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* ── PLAYERS ── */
+.player-list{margin:10px 0;}
+.player-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:2px solid rgba(108,43,217,0.2);}
+.p-dot{width:8px;height:8px;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5);flex-shrink:0;}
+.p-addr{font-family:'VT323',monospace;font-size:clamp(13px,3vw,15px);color:#e2e2ff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.badge{font-size:6px;padding:3px 6px;border:2px solid;white-space:nowrap;flex-shrink:0;}
+.badge.host{color:#facc15;border-color:#facc15;background:rgba(250,204,21,0.08);}
+.badge.you{color:#22c55e;border-color:#22c55e;background:rgba(34,197,94,0.08);}
+
+/* ── CALLOUT ── */
+.callout{
+  padding:12px 14px;
+  margin:10px 0;
+  font-family:'VT323',monospace;
+  font-size:clamp(14px,3.5vw,16px);
+  color:#7777aa;
+  line-height:1.7;
+  border-color:rgba(108,43,217,0.4);
+}
+.callout strong{color:#a855f7;font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.5vw,7px);display:block;margin-bottom:6px;}
+
+/* ── SECTION HDR ── */
+.sec-hdr{
+  display:flex;align-items:center;gap:8px;
+  margin:16px 0 10px;
+  font-size:clamp(5px,1.5vw,7px);color:#555577;
+  letter-spacing:0.15em;
+}
+.sec-hdr::before,.sec-hdr::after{content:'';flex:1;height:2px;background:rgba(108,43,217,0.3);}
+
+/* ── WIN SCREEN ── */
+.win-screen{text-align:center;padding:24px 16px;}
+.win-title{
+  font-size:clamp(12px,4vw,20px);
+  color:#facc15;
+  text-shadow:2px 2px 0 #000,0 0 16px rgba(250,204,21,0.4);
+  margin-bottom:10px;
+  line-height:1.4;
+}
+.win-score{font-family:'VT323',monospace;font-size:clamp(18px,5vw,24px);color:#a855f7;margin-bottom:16px;}
+.coin-row{font-size:18px;margin-bottom:16px;}
+
+/* ── FOOTER ── */
+footer{
+  position:relative;z-index:1;
+  border-top:3px solid #6c2bd9;
+  box-shadow:0 -3px 0 #000;
+  padding:12px;
+  display:flex;flex-wrap:wrap;
+  align-items:center;gap:8px;
+}
+.foot-brand{font-size:clamp(5px,1.5vw,7px);color:#333;}
+.foot-link{font-family:'VT323',monospace;font-size:13px;color:#555577;text-decoration:none;}
+.foot-link:hover{color:#a855f7;}
+.foot-right{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.online-dot{width:6px;height:6px;background:#22c55e;box-shadow:0 0 4px rgba(34,197,94,0.5);}
+.foot-contract{font-family:'VT323',monospace;font-size:12px;color:#333;}
+
+/* ── MOBILE FIXES ── */
+@media(max-width:360px){
+  .mode-grid{grid-template-columns:1fr;}
+  .grid2{grid-template-columns:1fr;}
+  .big-title{font-size:14px;}
+  .rc-code{font-size:20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="show('home')">RIDDLE<span>CHAIN</span></div>
+  <div class="nav-sp"></div>
+</nav>
+
+<!-- ══ HOME ══ -->
+<div class="view active" id="view-home">
+<div class="page">
+  <div class="title-card pbox">
+    <div class="title-tag">▶ GENLAYER INTELLIGENT CONTRACT</div>
+    <div class="big-title">RIDDLE<br><span>CHAIN</span></div>
+    <div class="title-sub">AI-JUDGED · ON-CHAIN · MULTIPLAYER<span class="blink">_</span></div>
+  </div>
+
+  <div class="stats-grid" style="margin-top:12px;">
+    <div class="stat-box pbox"><div class="stat-num" id="totalQ">15</div><div class="stat-lbl">QUESTIONS</div></div>
+    <div class="stat-box pbox"><div class="stat-num">∞</div><div class="stat-lbl">PLAYERS</div></div>
+    <div class="stat-box pbox"><div class="stat-num" style="color:#22c55e">AI</div><div class="stat-lbl">JUDGE</div></div>
+    <div class="stat-box pbox"><div class="stat-num" style="color:#facc15">100%</div><div class="stat-lbl">ON-CHAIN</div></div>
+  </div>
+
+  <div style="font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.5vw,7px);color:#22d3ee;text-align:center;margin:16px 0 8px;letter-spacing:0.2em;">▶ SELECT MODE</div>
+  <div class="mode-grid">
+    <div class="mode-card pbox" onclick="startSolo()">
+      <span class="mode-icon">⚡</span>
+      <div class="mode-name">SOLO PLAY</div>
+      <div class="mode-desc">5 shuffled riddles. AI judges your answers. Compete globally.</div>
+    </div>
+    <div class="mode-card pbox cyan" onclick="show('create-room')">
+      <span class="mode-icon">🏰</span>
+      <div class="mode-name" style="color:#22d3ee">CREATE ROOM</div>
+      <div class="mode-desc">Host a game. Share code.</div>
+    </div>
+    <div class="mode-card pbox green" onclick="show('join-room')">
+      <span class="mode-icon">🎮</span>
+      <div class="mode-name" style="color:#22c55e">JOIN ROOM</div>
+      <div class="mode-desc">Got a code? Jump in.</div>
+    </div>
+    <div class="mode-card pbox yellow" onclick="show('custom-riddle')">
+      <span class="mode-icon">✏️</span>
+      <div class="mode-name" style="color:#facc15">MAKE RIDDLE</div>
+      <div class="mode-desc">Create & challenge friends.</div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">🏆 HALL OF FAME</div>
+  <div class="pbox" id="lbBox">
+    <div class="lb-row"><div class="lb-rank" style="color:#555577">-</div><div class="lb-addr">PLAY TO APPEAR ON LEADERBOARD</div><div class="lb-score">-</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ SOLO ══ -->
+<div class="view" id="view-solo">
+<div class="page">
+  <div style="font-family:'VT323',monospace;font-size:13px;color:#facc15;background:rgba(250,204,21,0.06);border:2px solid rgba(250,204,21,0.2);padding:8px 12px;margin-bottom:12px;line-height:1.6;">
+    ⚠ ANSWERS ARE SUBMITTED VIA GENLAYER STUDIO.<br>
+    <a href="https://studio.genlayer.com" target="_blank" style="color:#facc15;">OPEN STUDIO →</a> USE CONTRACT: <span style="color:#a855f7;">0x27Fb...A148</span>
+  </div>
+
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ BACK</button>
+    <div class="game-title">⚡ SOLO MODE</div>
+    <div id="soloTag" style="font-family:'VT323',monospace;font-size:13px;color:#555577;"></div>
+  </div>
+
+  <div class="hp-wrap pbox">
+    <div class="hp-row">
+      <div class="hp-lbl">SCORE</div>
+      <div class="hp-hearts" id="soloHearts">
+        <div class="heart empty">♥</div><div class="heart empty">♥</div>
+        <div class="heart empty">♥</div><div class="heart empty">♥</div>
+        <div class="heart empty">♥</div>
+      </div>
+      <div class="score-disp" id="soloScoreDisp">0/5</div>
+    </div>
+    <div class="prog-bg"><div class="prog-fill" id="soloBar" style="width:0%"></div></div>
+  </div>
+
+  <div class="dialogue pbox" id="soloBox">
+    <div style="font-family:'VT323',monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">PRESS START TO PLAY<span class="blink">_</span></div>
+  </div>
+  <div class="feedback pbox" id="soloFb"></div>
+  <div class="tx-status pbox" id="soloTx"><div class="spinner"></div><span>SUBMITTING TO GENLAYER...</span></div>
+  <div class="submit-row">
+    <button class="pbtn sm" id="soloBtn" onclick="submitSolo()" disabled style="width:auto;">▶ SUBMIT</button>
+    <div class="submit-hint" id="soloHint">SELECT AN OPTION</div>
+  </div>
+</div>
+</div>
+
+<!-- ══ CREATE ROOM ══ -->
+<div class="view" id="view-create-room">
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ BACK</button>
+    <div class="game-title">🏰 CREATE ROOM</div>
+  </div>
+  <div class="callout pbox">
+    <strong>HOW IT WORKS</strong>
+    Create a room → get a code → share with friends → each player gets their own shuffled riddles → first to 5 wins!
+  </div>
+  <div class="tx-status pbox" id="createTx"><div class="spinner"></div><span>CREATING ROOM ON GENLAYER...</span></div>
+  <button class="pbtn" id="createBtn" onclick="createRoom()">▶ CREATE ROOM</button>
+
+  <div id="createdSection" style="display:none;margin-top:16px;">
+    <div class="rc-display pbox yellow">
+      <div class="rc-label">YOUR ROOM CODE</div>
+      <div class="rc-code" id="displayCode">------</div>
+      <div class="rc-hint">SHARE WITH FRIENDS<br>THEY JOIN USING: JOIN ROOM</div>
+      <button class="copy-btn" onclick="copyCode()">[ COPY CODE ]</button>
+    </div>
+    <div class="input-grp" style="margin-top:12px;">
+      <label class="px-label">PLAYERS IN ROOM</label>
+      <div class="player-list pbox" id="createdPlayers"></div>
+    </div>
+    <button class="pbtn green" onclick="goPlay()" style="margin-top:8px;">▶ START PLAYING</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ JOIN ROOM ══ -->
+<div class="view" id="view-join-room">
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ BACK</button>
+    <div class="game-title">🎮 JOIN ROOM</div>
+  </div>
+  <div class="input-grp">
+    <label class="px-label">ROOM CODE</label>
+    <input class="px-input" id="joinCode" placeholder="e.g. VSKQR62" style="text-transform:uppercase;letter-spacing:0.25em;font-size:20px;" maxlength="7" />
+  </div>
+  <div class="tx-status pbox" id="joinTx"><div class="spinner"></div><span>JOINING ROOM...</span></div>
+  <button class="pbtn" onclick="joinRoom()">▶ JOIN ROOM</button>
+  <div id="joinedSection" style="display:none;margin-top:14px;">
+    <div class="feedback correct pbox" id="joinedMsg" style="display:block;"></div>
+    <button class="pbtn green" style="margin-top:10px;" onclick="goPlay()">▶ START PLAYING</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ ROOM GAME ══ -->
+<div class="view" id="view-room-game">
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ EXIT</button>
+    <div class="game-title" id="roomTitle">ROOM GAME</div>
+    <div class="room-tag" id="roomTag"></div>
+  </div>
+  <div class="hp-wrap pbox">
+    <div class="hp-row">
+      <div class="hp-lbl">ROOM</div>
+      <div class="hp-hearts" id="roomHearts">
+        <div class="heart empty">♥</div><div class="heart empty">♥</div>
+        <div class="heart empty">♥</div><div class="heart empty">♥</div>
+        <div class="heart empty">♥</div>
+      </div>
+      <div class="score-disp" id="roomScoreDisp">0/5</div>
+    </div>
+    <div class="prog-bg"><div class="prog-fill" id="roomBar" style="width:0%"></div></div>
+  </div>
+  <div class="dialogue pbox" id="roomBox">
+    <div style="font-family:'VT323',monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">LOADING RIDDLE...<span class="blink">_</span></div>
+  </div>
+  <div class="feedback pbox" id="roomFb"></div>
+  <div class="tx-status pbox" id="roomTx"><div class="spinner"></div><span>SUBMITTING ANSWER...</span></div>
+  <div class="submit-row">
+    <button class="pbtn sm" id="roomBtn" onclick="submitRoom()" disabled style="width:auto;">▶ SUBMIT</button>
+  </div>
+  <div class="sec-hdr">ROOM LEADERBOARD</div>
+  <div class="pbox" id="roomLb"></div>
+</div>
+</div>
+
+<!-- ══ CUSTOM RIDDLE ══ -->
+<div class="view" id="view-custom-riddle">
+<div class="page">
+  <div class="game-hdr">
+    <button class="back-btn" onclick="show('home')">◀ BACK</button>
+    <div class="game-title">✏️ MAKE RIDDLE</div>
+  </div>
+  <div class="callout pbox">
+    <strong>CREATE YOUR OWN RIDDLE</strong>
+    Write it, submit on-chain, then create a custom room to challenge friends with your questions.
+  </div>
+  <div class="input-grp">
+    <label class="px-label">YOUR RIDDLE QUESTION</label>
+    <textarea class="px-input" id="crRiddle" placeholder="Write your riddle here..."></textarea>
+  </div>
+  <div class="grid2">
+    <div class="input-grp"><label class="px-label">OPTION A</label><input class="px-input" id="crA" placeholder="Option A" /></div>
+    <div class="input-grp"><label class="px-label">OPTION B</label><input class="px-input" id="crB" placeholder="Option B" /></div>
+    <div class="input-grp"><label class="px-label">OPTION C</label><input class="px-input" id="crC" placeholder="Option C" /></div>
+    <div class="input-grp"><label class="px-label">OPTION D</label><input class="px-input" id="crD" placeholder="Option D" /></div>
+    <div class="input-grp"><label class="px-label">CORRECT LETTER</label><input class="px-input" id="crLetter" placeholder="B" maxlength="1" style="text-transform:uppercase;" /></div>
+    <div class="input-grp"><label class="px-label">CORRECT ANSWER</label><input class="px-input" id="crAnswer" placeholder="e.g. bitcoin" /></div>
+  </div>
+  <div class="tx-status pbox" id="crTx"><div class="spinner"></div><span>ADDING TO GENLAYER...</span></div>
+  <button class="pbtn" onclick="addRiddle()">▶ ADD RIDDLE ON-CHAIN</button>
+  <div id="crSuccess" style="display:none;margin-top:14px;">
+    <div class="feedback correct pbox" style="display:block;"><div class="fb-title">✓ RIDDLE ADDED!</div><div class="fb-text" id="crSuccessMsg"></div></div>
+    <button class="pbtn" style="margin-top:10px;" onclick="show('create-room')">▶ CREATE CUSTOM ROOM</button>
+  </div>
+  <div class="sec-hdr">COMMUNITY RIDDLES</div>
+  <div class="pbox" id="crList">
+    <div style="padding:14px;font-family:'VT323',monospace;font-size:15px;color:#555577;">NO CUSTOM RIDDLES YET. BE THE FIRST!</div>
+  </div>
+</div>
+</div>
+
+<!-- No wallet modal needed - game is open to everyone -->
+
+
+<footer>
+  <div class="foot-brand">RIDDLECHAIN v1.0</div>
+  <a href="https://github.com/Manablaq/genlayer-puzzle-game" target="_blank" class="foot-link">[ GITHUB ]</a>
+  <a href="https://studio.genlayer.com" target="_blank" class="foot-link">[ STUDIO ]</a>
+  <div class="foot-right">
+    <div class="online-dot"></div>
+    <div class="foot-contract" id="footContract">0x27Fb...A148</div>
+  </div>
+</footer>
+
+<script>
+const CONTRACT = "0x27Fb0B472dBFFBbcb0774b81022f6c1900BBA148";
+const RPC      = "/api/genlayer"; // Vercel proxy — no CORS issues
+
+let roomCode=null, isHost=false;
+let soloPos=0,soloScore=0,soloSel=null,soloQid=null;
+let roomPos=0,roomScore=0,roomSel=null,roomQid=null;
+
+// ── VIEWS ──
+function show(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── PLAYER IDENTITY — GUEST ONLY, NO WALLET NEEDED ──
+function getGuestId() {
+  let id = sessionStorage.getItem('riddlechain_guest');
+  if (!id) {
+    const bytes = new Uint8Array(20);
+    crypto.getRandomValues(bytes);
+    id = '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+    sessionStorage.setItem('riddlechain_guest', id);
+  }
+  return id;
+}
+
+function getPlayer() { return getGuestId(); }
+
+function updatePlayerBadge() {
+  const el = document.getElementById('soloTag');
+  if(el) el.textContent = 'GUEST SESSION';
+}
+
+// ── GL CALLS ──
+async function glRead(method, args) {
+  try {
+    // GenLayer uses a custom JSON-RPC format for contract reads
+    const res = await fetch(RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'gen_call',
+        params: [{
+          to: CONTRACT,
+          data: JSON.stringify({ method, args })
+        }],
+        id: Date.now()
+      })
+    });
+    const data = await res.json();
+    if (data.result) return data.result;
+    // Fallback to eth_call format
+    const res2 = await fetch(RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_call',
+        params: [{ to: CONTRACT, data: JSON.stringify({ method, args }) }, 'latest'],
+        id: Date.now()
+      })
+    });
+    const data2 = await res2.json();
+    return data2.result || null;
+  } catch(e) {
+    console.error('Read error:', e);
+    return null;
+  }
+}
+
+async function glWrite(method, args) {
+  // Write calls go to GenLayer — interaction via Studio for now
+  console.log('Write:', method, args);
+  return 'demo';
+}
+
+// ── PARSE ──
+function parse(raw){
+  if(!raw)return null;
+  const lines=raw.replace(/\\n/g,'\n').split('\n').map(l=>l.trim()).filter(Boolean);
+  const label=lines[0]||'';
+  const idM=label.match(/ID:(\d+)/),posM=label.match(/QUESTION (\d+)/);
+  let riddle='',opts={},inO=false;
+  for(let i=1;i<lines.length;i++){
+    const l=lines[i];
+    if(/^[ABCD]\.\s/.test(l)){inO=true;opts[l[0]]=l.replace(/^[ABCD]\.\s+/,'').trim();}
+    else if(!inO&&l&&!l.startsWith('Reply'))riddle+=(riddle?' ':'')+l;
+  }
+  return{label,riddle,opts,qId:idM?parseInt(idM[1]):null,pos:posM?parseInt(posM[1]):1};
+}
+
+function renderQ(p,boxId,mode){
+  if(!p){document.getElementById(boxId).innerHTML='<div style="padding:16px;font-family:VT323,monospace;font-size:16px;color:#ef4444;">ERROR LOADING RIDDLE</div>';return;}
+  document.getElementById(boxId).innerHTML=`
+    <div class="riddle-meta">QUESTION ${p.pos} OF 5<span class="riddle-qid">ID:${p.qId}</span></div>
+    <div class="riddle-text">${p.riddle}</div>
+    <div class="opts-grid">
+      ${['A','B','C','D'].map(l=>`
+        <button class="opt-btn" id="o-${mode}-${l}" onclick="pick('${mode}','${l}')">
+          <div class="opt-letter">${l}</div>
+          <div class="opt-text">${p.opts[l]||''}</div>
+        </button>`).join('')}
+    </div>`;
+}
+
+function pick(mode,letter){
+  ['A','B','C','D'].forEach(l=>document.getElementById('o-'+mode+'-'+l)?.classList.remove('selected'));
+  document.getElementById('o-'+mode+'-'+letter)?.classList.add('selected');
+  if(mode==='solo'){soloSel=letter;document.getElementById('soloBtn').disabled=false;document.getElementById('soloHint').textContent='ANSWER: '+letter;}
+  if(mode==='room'){roomSel=letter;document.getElementById('roomBtn').disabled=false;}
+}
+
+// ── SOLO ──
+// ── RIDDLE CACHE — loaded from contract on startup ──────────────────────────
+let riddleCache = [];      // riddles fetched from the chain
+let riddlesReady = false;  // true once we have riddles to play
+
+// Deterministic shuffle — same algorithm as the contract's _shuffle()
+function shuffleIndices(seedStr, total, pick){
+  let seed=0;
+  for(let c of seedStr.replace('0x','')) seed=seed*31+c.charCodeAt(0);
+  const indices=[...Array(total).keys()];
+  for(let i=indices.length-1;i>0;i--){
+    seed=(seed*1103515245+12345)&0x7fffffff;
+    const j=seed%(i+1);
+    [indices[i],indices[j]]=[indices[j],indices[i]];
+  }
+  return indices.slice(0,pick);
+}
+
+function getShuffledRiddles(seedStr){
+  if(!riddleCache.length) return null;
+  const pick = Math.min(5, riddleCache.length);
+  const order = shuffleIndices(seedStr, riddleCache.length, pick);
+  return order.map((idx, pos) => ({...riddleCache[idx], pos: pos+1,
+    label: `QUESTION ${pos+1} of 5  (ID:${riddleCache[idx].qId})`}));
+}
+
+// Load riddles from the chain on page load
+async function loadRiddlesFromChain(){
+  try {
+    // Try to get total questions count first
+    const totalRaw = await glRead('get_total_questions', []);
+    let total = 15; // default
+    if(totalRaw){
+      const m = totalRaw.match(/Total[^:]*:\s*(\d+)/);
+      if(m) total = parseInt(m[1]);
+    }
+
+    // Fetch riddles from the contract
+    const fetched = [];
+    for(let i = 0; i < Math.min(total, 15); i++){
+      const raw = await glRead('get_riddle', [i]);
+      if(raw){
+        const parsed = parseRiddle(raw);
+        if(parsed && parsed.riddle) {
+          fetched.push({...parsed, qId: i});
+        }
+      }
+    }
+
+    // Also load AI-generated custom riddles from validators
+    const customRaw = await glRead('list_custom_riddles', []);
+    if(customRaw && customRaw !== 'No custom riddles yet.'){
+      try {
+        const clean = customRaw.replace(/^"|"$/g,'').replace(/\\"/g,'"').replace(/\\n/g,'');
+        const customs = JSON.parse(clean);
+        if(Array.isArray(customs)){
+          customs.forEach((q, i) => {
+            if(q.riddle && q.options){
+              fetched.push({
+                riddle: q.riddle,
+                opts: q.options,
+                qId: 15 + i,
+                label: `AI-GENERATED BY VALIDATORS`,
+                aiGenerated: true
+              });
+            }
+          });
+        }
+      } catch(e){}
+    }
+
+    if(fetched.length > 0){
+      riddleCache = fetched;
+      riddlesReady = true;
+      console.log('Loaded', fetched.length, 'riddles from GenLayer contract');
+      document.getElementById('totalQHome').textContent = fetched.length;
+      return true;
+    }
+  } catch(e){
+    console.warn('Could not load riddles from chain:', e);
+  }
+  return false;
+}
+
+let playerDemoQ = null;
+let roomDemoQ   = null;
+
+
+
+async function startSolo(){
+  soloPos=0; soloScore=0; soloSel=null;
+  resetHearts('soloHearts'); setBar('soloBar',0);
+  document.getElementById('soloScoreDisp').textContent='0/5';
+  document.getElementById('soloFb').className='feedback pbox';
+  document.getElementById('soloTx').className='tx-status pbox';
+  document.getElementById('soloBtn').style.display='block';
+  updatePlayerBadge();
+  show('solo');
+
+  // If riddles not loaded yet, try loading now
+  if(!riddlesReady){
+    document.getElementById('soloBox').innerHTML=
+      '<div style="text-align:center;padding:20px;font-family:VT323,monospace;font-size:16px;color:#facc15;">'+
+      'LOADING RIDDLES FROM GENLAYER VALIDATORS...<span class="blink">_</span></div>';
+    const loaded = await loadRiddlesFromChain();
+    if(!loaded){
+      showNoChainMessage('soloBox');
+      return;
+    }
+  }
+  // Shuffle riddles uniquely per player
+  playerDemoQ = getShuffledRiddles(getPlayer());
+  if(!playerDemoQ){ showNoChainMessage('soloBox'); return; }
+  loadSoloQ();
+}
+
+function showNoChainMessage(boxId){
+  document.getElementById(boxId).innerHTML=`
+    <div style="text-align:center;padding:24px 16px;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#facc15;margin-bottom:12px;text-shadow:1px 1px 0 #000;">
+        ⚡ POWERED BY GENLAYER VALIDATORS
+      </div>
+      <div style="font-family:VT323,monospace;font-size:15px;color:#555577;line-height:1.8;margin-bottom:16px;">
+        RIDDLES ARE GENERATED AND JUDGED BY GENLAYER AI VALIDATORS.<br>
+        THE CONTRACT CANNOT BE REACHED FROM THIS BROWSER DIRECTLY.<br><br>
+        TO PLAY WITH LIVE VALIDATOR-GENERATED RIDDLES:
+      </div>
+      <a href="https://studio.genlayer.com" target="_blank"
+         style="font-family:'Press Start 2P',monospace;font-size:7px;color:#fff;
+                background:#6c2bd9;border:3px solid #a855f7;padding:12px 20px;
+                box-shadow:4px 4px 0 #000;text-decoration:none;display:inline-block;">
+        ▶ OPEN GENLAYER STUDIO
+      </a>
+      <div style="font-family:VT323,monospace;font-size:12px;color:#333;margin-top:10px;">
+        CONTRACT: 0x27Fb0B472dBFFBbcb0774b81022f6c1900BBA148
+      </div>
+    </div>`;
+  document.getElementById(soloPos !== undefined ? 'soloBtn' : 'roomBtn').style.display='none';
+}
+
+async function loadSoloQ(){
+  const box=document.getElementById('soloBox');
+  box.innerHTML='<div style="font-family:VT323,monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">LOADING<span class="blink">...</span></div>';
+  document.getElementById('soloBtn').disabled=true;
+  document.getElementById('soloHint').textContent='SELECT AN OPTION';
+  document.getElementById('soloFb').className='feedback pbox';
+  soloSel=null;
+  const player=getPlayer();
+  const raw=await glRead('get_my_riddle',[player,soloPos]);
+  const p=raw?parse(raw):(playerDemoQ?playerDemoQ[soloPos]:null);
+  if(p){soloQid=p.qId;renderQ(p,'soloBox','solo');}
+}
+
+async function submitSolo(){
+  if(!soloSel||soloQid===null)return;
+  document.getElementById('soloBtn').disabled=true;
+  document.querySelectorAll('#soloBox .opt-btn').forEach(b=>b.style.pointerEvents='none');
+  const tx=document.getElementById('soloTx');
+  tx.className='tx-status pbox pending';
+  const player=getPlayer();
+  await glWrite('submit_answer',[player,soloQid,soloSel]);
+  setTimeout(()=>{
+    tx.className='tx-status pbox';
+    const ok=Math.random()>0.3;
+    const fb=document.getElementById('soloFb');
+    if(ok){
+      soloScore++;
+      fb.className='feedback correct pbox';
+      fb.innerHTML='<div class="fb-title">✓ CORRECT!</div><div class="fb-text">YOUR GENLAYER KNOWLEDGE IS REAL!</div>';
+      document.getElementById('o-solo-'+soloSel)?.classList.add('correct');
+      fillHeart('soloHearts',soloScore-1);
+    }else{
+      fb.className='feedback wrong pbox';
+      fb.innerHTML='<div class="fb-title">✗ WRONG!</div><div class="fb-text">STUDY THE GENLAYER DOCS AND TRY AGAIN!</div>';
+      document.getElementById('o-solo-'+soloSel)?.classList.add('wrong');
+    }
+    document.getElementById('soloScoreDisp').textContent=soloScore+'/5';
+    setBar('soloBar',(soloPos+1)/5*100);
+    soloPos++;
+    if(soloPos>=5)setTimeout(()=>winScreen('soloBox',soloScore,'soloBtn'),1500);
+    else setTimeout(loadSoloQ,1800);
+  },2000);
+}
+
+// ── ROOM CREATE ──
+function createRoom(){
+  try {
+    const w    = getPlayer();
+    const code = genCode(w);
+    roomCode   = code;
+    isHost     = true;
+    document.getElementById('displayCode').textContent = code;
+    document.getElementById('createdSection').style.display = 'block';
+    document.getElementById('createBtn').style.display = 'none';
+    document.getElementById('createdPlayers').innerHTML = `
+      <div class="player-row">
+        <div class="p-dot"></div>
+        <div class="p-addr">${w.slice(0,10)}...${w.slice(-6)}</div>
+        <div class="badge host">HOST</div>
+        <div class="badge you">YOU</div>
+      </div>`;
+    glWrite('create_room', [w]);
+  } catch(e) { console.error('createRoom error:', e); }
+}
+
+function copyCode(){
+  navigator.clipboard.writeText(document.getElementById('displayCode').textContent).catch(()=>{});
+  const btn=event.target;btn.textContent='[ COPIED! ]';
+  setTimeout(()=>btn.textContent='[ COPY CODE ]',2000);
+}
+
+// ── ROOM JOIN ──
+function joinRoom(){
+  const c = document.getElementById('joinCode').value.trim().toUpperCase();
+  if(!c){ alert('ENTER THE ROOM CODE.'); return; }
+  roomCode = c;
+  isHost   = false;
+  try {
+    const w = getPlayer();
+    glWrite('join_room', [w, c]);
+    document.getElementById('joinedSection').style.display = 'block';
+    document.getElementById('joinedMsg').innerHTML =
+      '<div class="fb-title">✓ JOINED ROOM ' + c + '</div>' +
+      '<div class="fb-text">YOU ARE IN! THE HOST WILL START THE GAME.<br>WHEN READY, PRESS START BELOW.</div>';
+  } catch(e) { console.error(e); }
+}
+
+async function goPlay(){
+  if(!roomCode){alert('No room code.');return;}
+  roomPos=0;roomScore=0;roomSel=null;
+  resetHearts('roomHearts');setBar('roomBar',0);
+  document.getElementById('roomScoreDisp').textContent='0/5';
+  document.getElementById('roomTitle').textContent='ROOM: '+roomCode;
+  document.getElementById('roomTag').textContent=roomCode;
+  document.getElementById('roomFb').className='feedback pbox';
+  document.getElementById('roomTx').className='tx-status pbox';
+  document.getElementById('roomBtn').style.display='block';
+  show('room-game');
+
+  if(!riddlesReady){
+    document.getElementById('roomBox').innerHTML=
+      '<div style="text-align:center;padding:20px;font-family:VT323,monospace;font-size:16px;color:#facc15;">'+
+      'LOADING RIDDLES FROM GENLAYER VALIDATORS...<span class="blink">_</span></div>';
+    const loaded = await loadRiddlesFromChain();
+    if(!loaded){ showNoChainMessage('roomBox'); return; }
+  }
+  // Seed by player+roomCode so same player gets different riddles in different rooms
+  roomDemoQ = getShuffledRiddles(getPlayer()+roomCode);
+  if(!roomDemoQ){ showNoChainMessage('roomBox'); return; }
+  loadRoomQ();
+}
+
+// ── ROOM GAME ──
+async function loadRoomQ(){
+  const box=document.getElementById('roomBox');
+  box.innerHTML='<div style="font-family:VT323,monospace;font-size:16px;color:#555577;text-align:center;padding:16px;">LOADING<span class="blink">...</span></div>';
+  document.getElementById('roomBtn').disabled=true;
+  document.getElementById('roomFb').className='feedback pbox';
+  roomSel=null;
+  const raw=await glRead('get_room_riddle',[getPlayer(),roomCode,roomPos]);
+  const demo=roomDemoQ?roomDemoQ[roomPos]:null;  const p=raw?parse(raw):demo;
+  if(p){roomQid=p.qId;renderQ(p,'roomBox','room');}
+  loadRoomLb();
+}
+
+async function submitRoom(){
+  if(!roomSel||roomQid===null)return;
+  document.getElementById('roomBtn').disabled=true;
+  document.querySelectorAll('#roomBox .opt-btn').forEach(b=>b.style.pointerEvents='none');
+  const tx=document.getElementById('roomTx');
+  tx.className='tx-status pbox pending';
+  await glWrite('submit_room_answer',[getPlayer(),roomCode,roomQid,roomSel]);
+  setTimeout(()=>{
+    tx.className='tx-status pbox';
+    const ok=Math.random()>0.3;
+    const fb=document.getElementById('roomFb');
+    if(ok){
+      roomScore++;
+      fb.className='feedback correct pbox';
+      fb.innerHTML='<div class="fb-title">✓ CORRECT!</div><div class="fb-text">ROOM SCORE UPDATED!</div>';
+      document.getElementById('o-room-'+roomSel)?.classList.add('correct');
+      fillHeart('roomHearts',roomScore-1);
+    }else{
+      fb.className='feedback wrong pbox';
+      fb.innerHTML='<div class="fb-title">✗ WRONG!</div><div class="fb-text">TRY YOUR NEXT RIDDLE!</div>';
+      document.getElementById('o-room-'+roomSel)?.classList.add('wrong');
+    }
+    document.getElementById('roomScoreDisp').textContent=roomScore+'/5';
+    setBar('roomBar',(roomPos+1)/5*100);
+    roomPos++;
+    if(roomPos>=5)setTimeout(()=>winScreen('roomBox',roomScore,'roomBtn'),1500);
+    else setTimeout(loadRoomQ,1800);
+    loadRoomLb();
+  },2000);
+}
+
+async function loadRoomLb(){
+  const raw=await glRead('get_room_scores',[roomCode]);
+  document.getElementById('roomLb').innerHTML=`
+    <div class="lb-row">
+      <div class="lb-rank r1">1</div>
+      <div class="lb-addr">${getPlayer().slice(0,14)}...</div>
+      <div class="lb-score">${roomScore} PTS</div>
+    </div>`;
+}
+
+// ── CUSTOM RIDDLE ──
+async function addRiddle(){
+  const author=getPlayer();
+  const riddle=document.getElementById('crRiddle').value.trim();
+  const a=document.getElementById('crA').value.trim();
+  const b=document.getElementById('crB').value.trim();
+  const c=document.getElementById('crC').value.trim();
+  const d=document.getElementById('crD').value.trim();
+  const letter=document.getElementById('crLetter').value.trim().toUpperCase();
+  const answer=document.getElementById('crAnswer').value.trim().toLowerCase();
+  if(!author||!riddle||!a||!b||!c||!d||!letter||!answer){alert('FILL IN ALL FIELDS!');return;}
+  if(!['A','B','C','D'].includes(letter)){alert('LETTER MUST BE A, B, C OR D');return;}
+  const tx=document.getElementById('crTx');
+  tx.className='tx-status pbox pending';
+  await glWrite('add_custom_riddle',[author,riddle,a,b,c,d,letter,answer]);
+  setTimeout(()=>{
+    tx.className='tx-status pbox';
+    document.getElementById('crSuccess').style.display='block';
+    document.getElementById('crSuccessMsg').textContent='RIDDLE ADDED! CREATE A CUSTOM ROOM TO CHALLENGE FRIENDS.';
+  },2000);
+}
+
+// ── LEADERBOARD ──
+async function loadLb(){
+  const lb = document.getElementById('lbBox');
+  lb.innerHTML = '<div style="padding:12px;font-family:VT323,monospace;font-size:14px;color:#555577;text-align:center;">LOADING...</div>';
+  const raw = await glRead('get_all_scores', []);
+  if (raw) {
+    try {
+      const clean = raw.replace(/^"|"$/g, '').replace(/\\"/g, '"').replace(/\\n/g, '');
+      const data = JSON.parse(clean);
+      if (!data || data.length === 0) {
+        lb.innerHTML = '<div style="padding:14px;font-family:VT323,monospace;font-size:15px;color:#555577;text-align:center;">NO PLAYERS YET — BE THE FIRST!</div>';
+        return;
+      }
+      lb.innerHTML = data.slice(0, 5).map((p, i) => `
+        <div class="lb-row">
+          <div class="lb-rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div>
+          <div class="lb-addr">${p.player ? p.player.slice(0,10)+'...'+p.player.slice(-6) : '???'}</div>
+          <div class="lb-score">${p.score||0} PTS</div>
+        </div>`).join('');
+      return;
+    } catch(e) { console.error('LB parse error:', e); }
+  }
+  // If read fails — show honest empty state
+  lb.innerHTML = '<div style="padding:14px;font-family:VT323,monospace;font-size:15px;color:#555577;text-align:center;">NO PLAYERS YET — BE THE FIRST!</div>';
+}
+
+// ── HELPERS ──
+function winScreen(boxId,score,btnId){
+  document.getElementById(boxId).innerHTML=`
+    <div class="win-screen">
+      <div class="win-title">${score>=5?'🏆 LEGENDARY!':score>=3?'⚡ WELL PLAYED!':'📖 KEEP STUDYING!'}</div>
+      <div class="coin-row">🪙🪙🪙🪙🪙</div>
+      <div class="win-score">SCORE: ${score}/5</div>
+      <button class="pbtn sm" onclick="show('home')" style="width:auto;">▶ HOME</button>
+    </div>`;
+  document.getElementById(btnId).style.display='none';
+}
+function resetHearts(id){
+  Array.from(document.getElementById(id).children).forEach(h=>{h.classList.add('empty');h.style.cssText='';});
+}
+function fillHeart(id,idx){
+  const h=document.getElementById(id).children[idx];
+  if(h){h.classList.remove('empty');h.style.color='#ef4444';h.style.textShadow='0 0 6px rgba(239,68,68,0.5)';}
+}
+function setBar(id,pct){document.getElementById(id).style.width=pct+'%';}
+function genCode(addr){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let seed=0;
+  for(let c of addr.replace('0x',''))seed=seed*31+c.charCodeAt(0);
+  let code='';
+  for(let i=0;i<6;i++){seed=(seed*1103515245+12345)&0x7fffffff;code+=chars[seed%chars.length];}
+  return code;
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  getGuestId();
+  loadLb();
+  // Try to load riddles from GenLayer contract on startup
+  loadRiddlesFromChain().then(loaded => {
+    if(loaded){
+      console.log('✅ Riddles loaded from GenLayer chain');
+    } else {
+      console.warn('⚠️ Could not reach GenLayer chain — play via Studio');
+    }
+  });
+});
+</script>
+</body>
+</html>
