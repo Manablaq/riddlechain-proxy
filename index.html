@@ -415,12 +415,7 @@ footer{
     <div class="title-sub">AI-JUDGED · ON-CHAIN · MULTIPLAYER<span class="blink">_</span></div>
   </div>
 
-  <div class="stats-grid" style="margin-top:12px;">
-    <div class="stat-box pbox"><div class="stat-num" id="totalQ">15</div><div class="stat-lbl">QUESTIONS</div></div>
-    <div class="stat-box pbox"><div class="stat-num">∞</div><div class="stat-lbl">PLAYERS</div></div>
-    <div class="stat-box pbox"><div class="stat-num" style="color:#22c55e">AI</div><div class="stat-lbl">JUDGE</div></div>
-    <div class="stat-box pbox"><div class="stat-num" style="color:#facc15">100%</div><div class="stat-lbl">ON-CHAIN</div></div>
-  </div>
+
 
   <div style="font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.5vw,7px);color:#22d3ee;text-align:center;margin:16px 0 8px;letter-spacing:0.2em;">▶ SELECT MODE</div>
   <div class="mode-grid">
@@ -446,10 +441,7 @@ footer{
     </div>
   </div>
 
-  <div class="sec-hdr">🏆 HALL OF FAME</div>
-  <div class="pbox" id="lbBox">
-    <div class="lb-row"><div class="lb-rank" style="color:#555577">-</div><div class="lb-addr">PLAY TO APPEAR ON LEADERBOARD</div><div class="lb-score">-</div></div>
-  </div>
+
 </div>
 </div>
 
@@ -626,7 +618,7 @@ footer{
 
 <script>
 const CONTRACT = "0x27Fb0B472dBFFBbcb0774b81022f6c1900BBA148";
-const RPC      = "/api/genlayer"; // Vercel proxy — no CORS issues
+const RPC      = "https://riddlechain-proxy.vercel.app/api/genlayer";
 
 let roomCode=null, isHost=false;
 let soloPos=0,soloScore=0,soloSel=null,soloQid=null;
@@ -813,7 +805,6 @@ async function loadRiddlesFromChain(){
       riddleCache = fetched;
       riddlesReady = true;
       console.log('Loaded', fetched.length, 'riddles from GenLayer contract');
-      document.getElementById('totalQHome').textContent = fetched.length;
       return true;
     }
   } catch(e){
@@ -1066,32 +1057,6 @@ async function addRiddle(){
   },2000);
 }
 
-// ── LEADERBOARD ──
-async function loadLb(){
-  const lb = document.getElementById('lbBox');
-  lb.innerHTML = '<div style="padding:12px;font-family:VT323,monospace;font-size:14px;color:#555577;text-align:center;">LOADING...</div>';
-  const raw = await glRead('get_all_scores', []);
-  if (raw) {
-    try {
-      const clean = raw.replace(/^"|"$/g, '').replace(/\\"/g, '"').replace(/\\n/g, '');
-      const data = JSON.parse(clean);
-      if (!data || data.length === 0) {
-        lb.innerHTML = '<div style="padding:14px;font-family:VT323,monospace;font-size:15px;color:#555577;text-align:center;">NO PLAYERS YET — BE THE FIRST!</div>';
-        return;
-      }
-      lb.innerHTML = data.slice(0, 5).map((p, i) => `
-        <div class="lb-row">
-          <div class="lb-rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div>
-          <div class="lb-addr">${p.player ? p.player.slice(0,10)+'...'+p.player.slice(-6) : '???'}</div>
-          <div class="lb-score">${p.score||0} PTS</div>
-        </div>`).join('');
-      return;
-    } catch(e) { console.error('LB parse error:', e); }
-  }
-  // If read fails — show honest empty state
-  lb.innerHTML = '<div style="padding:14px;font-family:VT323,monospace;font-size:15px;color:#555577;text-align:center;">NO PLAYERS YET — BE THE FIRST!</div>';
-}
-
 // ── HELPERS ──
 function winScreen(boxId,score,btnId){
   document.getElementById(boxId).innerHTML=`
@@ -1123,7 +1088,6 @@ function genCode(addr){
 // ── INIT ──
 window.addEventListener('DOMContentLoaded', () => {
   getGuestId();
-  loadLb();
   // Try to load riddles from GenLayer contract on startup
   loadRiddlesFromChain().then(loaded => {
     if(loaded){
