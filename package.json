@@ -1,0 +1,8 @@
+{
+  "name": "riddlechain-proxy",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "genlayer-js": "latest"
+  }
+}
