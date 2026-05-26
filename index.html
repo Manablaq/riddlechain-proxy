@@ -653,35 +653,13 @@ function updatePlayerBadge() {
 // ── GL CALLS ──
 async function glRead(method, args) {
   try {
-    // GenLayer uses a custom JSON-RPC format for contract reads
-    const res = await fetch(RPC, {
+    const r = await fetch(RPC, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'gen_call',
-        params: [{
-          to: CONTRACT,
-          data: JSON.stringify({ method, args })
-        }],
-        id: Date.now()
-      })
+      body: JSON.stringify({ method, args })
     });
-    const data = await res.json();
-    if (data.result) return data.result;
-    // Fallback to eth_call format
-    const res2 = await fetch(RPC, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'eth_call',
-        params: [{ to: CONTRACT, data: JSON.stringify({ method, args }) }, 'latest'],
-        id: Date.now()
-      })
-    });
-    const data2 = await res2.json();
-    return data2.result || null;
+    const d = await r.json();
+    return d.result || null;
   } catch(e) {
     console.error('Read error:', e);
     return null;
